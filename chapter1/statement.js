@@ -12,8 +12,6 @@ function statement(invoice, plays) {
   }).format;
 
   for (let perf of invoice.performances) {
-    let thisAmount = amountFor(perf);
-
     // 加入 volume credit
     volumeCredits += Math.max(perf.audience - 30, 0);
     // 每十名喜劇觀眾可獲得額外點數
@@ -22,10 +20,10 @@ function statement(invoice, plays) {
     }
 
     // 印出這份訂單
-    result += `${playFor(perf).name}: ${format(thisAmount / 100)} (${
+    result += `${playFor(perf).name}: ${format(amountFor(perf) / 100)} (${
       perf.audience
     }) seats\n`;
-    totalAmount += thisAmount;
+    totalAmount += amountFor(perf);
   }
 
   result += `Amount owed is ${format(totalAmount / 100)}\n`;
