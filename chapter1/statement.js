@@ -1,65 +1,66 @@
-var plays = require("./__mocks__/plays.json");
-var invoices = require("./__mocks__/invoices.json");
+var plays = require('./__mocks__/plays.json');
+var invoices = require('./__mocks__/invoices.json');
 
 function statement(invoice, plays) {
-  let totalAmount = 0;
-  let volumeCredits = 0;
-  let result = `Statement for ${invoice.customer}\n`;
-  const format = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  }).format;
+	let totalAmount = 0;
+	let volumeCredits = 0;
+	let result = `Statement for ${invoice.customer}\n`;
 
-  for (let perf of invoice.performances) {
-    // 加入 volume credit
-    volumeCredits += Math.max(perf.audience - 30, 0);
-    // 每十名喜劇觀眾可獲得額外點數
-    if ("comedy" === playFor(perf).type) {
-      volumeCredits += Math.floor(perf.audience / 5);
-    }
+	for (let perf of invoice.performances) {
+		volumeCredits += volumeCreditsFor(perf);
 
-    // 印出這份訂單
-    result += `${playFor(perf).name}: ${format(amountFor(perf) / 100)} (${
-      perf.audience
-    }) seats\n`;
-    totalAmount += amountFor(perf);
-  }
+		// 印出這份訂單
+		result += `${playFor(perf).name}: ${usd(amountFor(perf))} (${perf.audience}) seats\n`;
+		totalAmount += amountFor(perf);
+	}
 
-  result += `Amount owed is ${format(totalAmount / 100)}\n`;
-  result += `You earned ${volumeCredits} credits\n`;
-  return result;
+	result += `Amount owed is ${usd(totalAmount)}\n`;
+	result += `You earned ${volumeCredits} credits\n`;
+	return result;
 
-  function amountFor(aPerformance) {
-    let result = 0;
+	function usd(aNumber) {
+		return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(
+			aNumber / 100
+		);
+	}
 
-    switch (playFor(aPerformance).type) {
-      case "tragedy":
-        result = 40000;
-        if (aPerformance.audience > 30) {
-          result += 1000 * (aPerformance.audience - 30);
-        }
-        break;
+	function volumeCreditsFor(aPerformance) {
+		let result = 0;
+		result += Math.max(aPerformance.audience - 30, 0);
+		if ('comedy' === playFor(aPerformance).type) result += Math.floor(aPerformance.audience / 5);
+		return result;
+	}
 
-      case "comedy":
-        result = 30000;
-        if (aPerformance.audience > 20) {
-          result += 10000 + 500 * (aPerformance.audience - 20);
-        }
-        result += 300 * aPerformance.audience;
-        break;
+	function amountFor(aPerformance) {
+		let result = 0;
 
-      default:
-        throw new Error(`unknown type: ${playFor(perf).type}`);
-    }
-    return result;
-  }
+		switch (playFor(aPerformance).type) {
+			case 'tragedy':
+				result = 40000;
+				if (aPerformance.audience > 30) {
+					result += 1000 * (aPerformance.audience - 30);
+				}
+				break;
 
-  function playFor(aPerformance) {
-    return plays[aPerformance.playID];
-  }
+			case 'comedy':
+				result = 30000;
+				if (aPerformance.audience > 20) {
+					result += 10000 + 500 * (aPerformance.audience - 20);
+				}
+				result += 300 * aPerformance.audience;
+				break;
+
+			default:
+				throw new Error(`unknown type: ${playFor(perf).type}`);
+		}
+		return result;
+	}
+
+	function playFor(aPerformance) {
+		return plays[aPerformance.playID];
+	}
 }
 
 module.exports = {
-  statement,
+	statement,
 };
